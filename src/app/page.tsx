@@ -1,69 +1,73 @@
-import Image from "next/image";
+import Link from "next/link";
+import { QuickCaptureTrigger } from "@/components/app-shell";
+import { Icon } from "@/components/icon";
+import { MockBookCover, ProgressBar, SectionHeader } from "@/components/ui";
+import { currentBook, recentEntries, readingSummary } from "@/data/mock";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="dashboard page-stack">
+      <header className="dashboard-intro">
+        <div>
+          <p className="eyebrow">PERSONAL READING OS <span className="eyebrow-dot">·</span> 9月18日 星期五</p>
+          <h1 className="welcome-title">你好，今天也适合读几页。</h1>
+          <p className="welcome-copy">给阅读留一点时间，让想法慢慢沉淀。</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <section aria-labelledby="continue-heading" className="dashboard-section">
+        <SectionHeader id="continue-heading" eyebrow="CURRENTLY READING" title="继续阅读" aside={<span className="section-note">上次停在这里</span>} />
+        <div className="featured-book">
+          <MockBookCover />
+          <div className="featured-copy">
+            <p className="book-status"><span className="status-dot" /> 正在阅读 <span className="middot">·</span> {currentBook.lastRead}</p>
+            <h3>{currentBook.title}</h3>
+            <p className="book-author">{currentBook.author} <span className="middot">·</span> {currentBook.subtitle}</p>
+            <p className="book-chapter">{currentBook.chapter}</p>
+            <div className="book-progress"><div className="progress-meta"><span>阅读进度</span><strong>{currentBook.progress}%</strong></div><ProgressBar value={currentBook.progress} /></div>
+            <div className="featured-actions">
+              <Link className="button button-primary" href={`/reader/${currentBook.id}`}>继续阅读 <Icon name="arrow" width={18} height={18} /></Link>
+              <span className="action-hint">阅读器即将开放</span>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      <div className="dashboard-lower">
+        <section aria-labelledby="recent-heading" className="dashboard-section recent-section">
+          <SectionHeader id="recent-heading" eyebrow="RECENT THOUGHTS" title="最近记录" />
+          <div className="entry-list">
+            {recentEntries.map((entry) => (
+              <article className="entry-row" key={entry.id}>
+                <div className="entry-meta"><span className="entry-type">{entry.type}</span><span>{entry.date}</span></div>
+                <h3>{entry.title}</h3>
+                <p className="entry-excerpt">{entry.excerpt}</p>
+                {entry.source && <p className="entry-source">来自 {entry.source}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <aside className="dashboard-aside" aria-label="阅读摘要与快速记录">
+          <section className="summary-section">
+            <SectionHeader eyebrow="A LITTLE PROGRESS" title="阅读摘要" />
+            <dl className="summary-list">
+              {readingSummary.map((item) => (
+                <div className="summary-row" key={item.label}>
+                  <dt>{item.label}<small>{item.detail}</small></dt>
+                  <dd>{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+          <section className="capture-callout" aria-labelledby="capture-callout-title">
+            <p className="eyebrow">A PLACE FOR IDEAS</p>
+            <h2 id="capture-callout-title">有想法，先记下来。</h2>
+            <p>不必等它完整。未来可以从这里开始一条灵感或笔记。</p>
+            <QuickCaptureTrigger className="text-action">查看快速记录 <Icon name="arrow" width={17} height={17} /></QuickCaptureTrigger>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
