@@ -20,6 +20,8 @@
 
 ## 当前状态
 
-**V0.1 基础 UI 已完成。V0.2 — Data Foundation & Bookshelf MVP 正在开发。** 当前处于 V0.2 Phase 1，仅对齐产品、数据与设计文档；尚未接入 Supabase/PostgreSQL，也未实现认证、真实书籍数据或进度写入。
+**V0.1 基础 UI 已完成。V0.2 — Data Foundation & Bookshelf MVP 正在开发。** Supabase/PostgreSQL 数据基础、RLS 与单用户 Email + Password 登录闭环已经建立；个人用户由 Supabase Dashboard 手动创建，应用不开放注册。下一步继续实现手动添加书籍、书架详情、人工页码进度和 Dashboard 真实数据联动。
+
+V0.2 不使用 Magic Link。后续如配置可靠的自定义 SMTP，可重新评估将 Magic Link 作为个人登录方式。
 
 V0.2 的 `current_page` 只用于用户手动记录纸质书或页码明确内容的阅读进度。EPUB/PDF 文件导入继续保留在 V0.3；EPUB/PDF Reader、CFI/PDF 真实阅读位置、阅读会话与跨设备位置恢复继续由 V0.4–V0.6 负责，不在 V0.2 提前实现。

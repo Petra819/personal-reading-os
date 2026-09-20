@@ -1,6 +1,50 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const protectedRoutes = [
+  "/library",
+  "/notes",
+  "/ideas",
+  "/inspiration",
+  "/writing",
+  "/freewriting",
+  "/search",
+  "/reflections",
+  "/settings",
+  "/reader",
+] as const;
+
+function isProtectedRoute(pathname: string) {
+  return pathname === "/" || protectedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+function redirectWithSession(
+  request: NextRequest,
+  sessionResponse: NextResponse,
+  pathname: string,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+
+  const redirectResponse = NextResponse.redirect(url);
+
+  sessionResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+
+  ["cache-control", "expires", "pragma"].forEach((header) => {
+    const value = sessionResponse.headers.get(header);
+    if (value) {
+      redirectResponse.headers.set(header, value);
+    }
+  });
+
+  return redirectResponse;
+}
+
 function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -41,9 +85,19 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // This verifies the current access token and refreshes it when necessary.
-  // Route protection will be added with the authentication UI in a later step.
-  await supabase.auth.getClaims();
+  // Keep this call directly after client creation. It verifies the access
+  // token and refreshes the cookie-backed session when necessary.
+  const { data } = await supabase.auth.getClaims();
+  const isAuthenticated = Boolean(data?.claims?.sub);
+  const pathname = request.nextUrl.pathname;
+
+  if (!isAuthenticated && isProtectedRoute(pathname)) {
+    return redirectWithSession(request, response, "/login");
+  }
+
+  if (isAuthenticated && pathname === "/login") {
+    return redirectWithSession(request, response, "/");
+  }
 
   return response;
 }

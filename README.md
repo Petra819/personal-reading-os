@@ -25,9 +25,11 @@ V0.1 is complete and includes:
 - Desktop, tablet, and mobile layouts
 - Reusable typography, buttons, inputs, progress, empty states, and navigation patterns
 
-V0.2 is now in development. Its planned scope is minimal authentication, private Supabase/PostgreSQL data, manual book creation, Bookshelf, Book Detail, basic page-based reading progress, and real Dashboard data.
+V0.2 is now in development. The Supabase/PostgreSQL data foundation and single-user Email + Password authentication are in place. The remaining scope covers manual book creation, Bookshelf, Book Detail, basic page-based reading progress, and real Dashboard data.
 
-The repository is currently still running on the V0.1 UI foundation and mock data. Supabase, authentication, database persistence, real book imports, full CRUD workflows, EPUB/PDF reading, and search have not been connected yet.
+Application content still uses the V0.1 UI foundation and mock data. Bookshelf CRUD, real Dashboard data, book imports, EPUB/PDF reading, and search have not been connected yet.
+
+Authentication currently uses a single personal account created manually in the Supabase Dashboard. The application provides Email + Password sign-in and does not expose public registration. Magic Link authentication may be considered later if custom SMTP is configured.
 
 ## Screenshots
 
@@ -55,8 +57,10 @@ Screenshots will be added as the interface reaches stable review points.
 - [TypeScript 5](https://www.typescriptlang.org/)
 - [Tailwind CSS 4](https://tailwindcss.com/)
 - [ESLint 9](https://eslint.org/) with `eslint-config-next`
+- [Supabase JS 2.116.0](https://supabase.com/docs/reference/javascript/) and `@supabase/ssr` 0.12.7
+- Supabase Auth and PostgreSQL with Row Level Security
 
-Supabase and PostgreSQL are planned for V0.2. They are not connected in the current codebase yet.
+Supabase currently provides cookie-based authentication and the initial private data schema. Application pages do not query or mutate book data yet.
 
 ## Project Structure
 
@@ -69,10 +73,12 @@ personal-reading-os/
 │   ├── PRD.md        # Product scope and requirements
 │   └── ROADMAP.md    # Phased delivery plan
 ├── public/           # Static assets
-└── src/
+├── src/
     ├── app/          # App Router pages and global styles
     ├── components/   # Shared UI and application shell components
-    └── data/         # Temporary mock data
+    ├── data/         # Temporary mock data
+    └── lib/          # Supabase browser, server, and session helpers
+└── supabase/         # Local configuration and reviewed SQL migrations
 ```
 
 ## Getting Started
@@ -82,6 +88,8 @@ Install dependencies:
 ```bash
 npm install
 ```
+
+Copy `.env.example` to `.env.local` and provide the Supabase project URL and publishable key. A personal Email + Password user must be created manually in the Supabase Dashboard; the application does not provide sign-up.
 
 Start the development server:
 
@@ -124,4 +132,4 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for scope and completion criteria for eac
 
 ## Status
 
-**Active development.** V0.1 Responsive UI Foundation is complete, and V0.2 Data Foundation & Bookshelf MVP is now in progress. The current codebase does not yet connect to Supabase or PostgreSQL; authentication, persistence, real book data, readers, and production workflows will be implemented progressively according to the roadmap.
+**Active development.** V0.1 Responsive UI Foundation is complete, and V0.2 Data Foundation & Bookshelf MVP is now in progress. Supabase data foundations and single-user Email + Password authentication are implemented; Bookshelf persistence, real Dashboard data, readers, and production workflows remain in development.

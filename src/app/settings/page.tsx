@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { PageHeader } from "@/components/ui";
+import { SignOutForm } from "./sign-out-form";
 
 const destinations = [
   { label: "阅读心得", href: "/reflections", detail: "记录一本书带来的思考" },
@@ -12,7 +13,7 @@ const destinations = [
 export default function SettingsPage() {
   return (
     <div className="page-stack simple-page">
-      <PageHeader eyebrow="YOUR SPACE" title="我的空间" description="从这里前往其他内容页面。账户和阅读偏好设置即将开放。" />
+      <PageHeader eyebrow="YOUR SPACE" title="我的空间" description="从这里前往其他内容页面，并管理当前登录状态。" />
       <section className="settings-section" aria-labelledby="explore-heading">
         <p className="eyebrow">EXPLORE</p>
         <h2 id="explore-heading" className="section-title">更多空间</h2>
@@ -28,7 +29,13 @@ export default function SettingsPage() {
       <section className="settings-section" aria-labelledby="preferences-heading">
         <p className="eyebrow">PREFERENCES</p>
         <h2 id="preferences-heading" className="section-title">偏好设置</h2>
-        <p className="settings-note">阅读主题、账户与标签管理即将逐步开放。</p>
+        <p className="settings-note">阅读主题与标签管理即将逐步开放。</p>
+      </section>
+      <section className="settings-section" aria-labelledby="account-heading">
+        <p className="eyebrow">ACCOUNT</p>
+        <h2 id="account-heading" className="section-title">个人账户</h2>
+        <p className="settings-note">当前空间采用个人单用户模式，不开放公开注册。</p>
+        <SignOutForm />
       </section>
     </div>
   );

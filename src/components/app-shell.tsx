@@ -127,6 +127,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, [menuOpen, captureOpen]);
 
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
   if (isReader) {
     return (
       <div className="reader-frame">
