@@ -14,9 +14,9 @@ The project prioritizes a calm reading experience, clear source context, low-fri
 
 ## Current Version
 
-**V0.1 — Responsive UI Foundation**
+**V0.2 — Data Foundation & Bookshelf MVP (in development)**
 
-The current version includes:
+V0.1 is complete and includes:
 
 - Responsive application shell and navigation
 - Dashboard with mock reading activity
@@ -25,7 +25,9 @@ The current version includes:
 - Desktop, tablet, and mobile layouts
 - Reusable typography, buttons, inputs, progress, empty states, and navigation patterns
 
-V0.1 is a UI foundation built with mock data. Authentication, database persistence, real book imports, full CRUD workflows, EPUB/PDF reading, and search are not implemented yet.
+V0.2 is now in development. Its planned scope is minimal authentication, private Supabase/PostgreSQL data, manual book creation, Bookshelf, Book Detail, basic page-based reading progress, and real Dashboard data.
+
+The repository is currently still running on the V0.1 UI foundation and mock data. Supabase, authentication, database persistence, real book imports, full CRUD workflows, EPUB/PDF reading, and search have not been connected yet.
 
 ## Screenshots
 
@@ -54,7 +56,7 @@ Screenshots will be added as the interface reaches stable review points.
 - [Tailwind CSS 4](https://tailwindcss.com/)
 - [ESLint 9](https://eslint.org/) with `eslint-config-next`
 
-Supabase and PostgreSQL are planned for later stages. They are not connected in the current version.
+Supabase and PostgreSQL are planned for V0.2. They are not connected in the current codebase yet.
 
 ## Project Structure
 
@@ -99,11 +101,11 @@ npm run build
 ## Roadmap
 
 - [x] **V0.1 — Basic UI:** Responsive application shell, navigation, page foundations, typography, and empty states
-- [ ] **V0.2 — User System:** Supabase authentication, sessions, and private data boundaries
-- [ ] **V0.3 — Bookshelf:** EPUB/PDF imports, private storage, metadata, covers, status, and filtering
+- [ ] **V0.2 — Data Foundation & Bookshelf MVP (in progress):** Minimal authentication, private data, manual books, Book Detail, page-based progress, and real Dashboard data
+- [ ] **V0.3 — Bookshelf File Imports:** EPUB/PDF imports, private storage, file metadata, covers, and duplicate handling
 - [ ] **V0.4 — EPUB Reader:** EPUB content, table of contents, reading settings, and navigation
 - [ ] **V0.5 — PDF Reader:** PDF pages, page navigation, zoom, and responsive reading layout
-- [ ] **V0.6 — Reading Progress:** Saved positions, cross-device recovery rules, and reading sessions
+- [ ] **V0.6 — Reading Locations and Sessions:** EPUB/PDF positions, cross-device recovery rules, and reading sessions
 - [ ] **V0.7 — Notes and Highlights:** Excerpts, highlights, notes, and return-to-source navigation
 - [ ] **V0.8 — Ideas, Reflections, and Writing:** Unified entries, references, and quick capture
 - [ ] **V0.9 — Search, Tags, and Statistics:** Cross-content retrieval, shared tags, and reading analytics
@@ -122,4 +124,4 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for scope and completion criteria for eac
 
 ## Status
 
-**Active development.** Personal Reading OS is in an early stage. The responsive UI foundation is complete, while persistence, authentication, readers, and production workflows will be implemented progressively according to the roadmap.
+**Active development.** V0.1 Responsive UI Foundation is complete, and V0.2 Data Foundation & Bookshelf MVP is now in progress. The current codebase does not yet connect to Supabase or PostgreSQL; authentication, persistence, real book data, readers, and production workflows will be implemented progressively according to the roadmap.

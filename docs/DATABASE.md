@@ -2,7 +2,7 @@
 
 ## 1. 范围与约定
 
-本文规划未来 Supabase/PostgreSQL 的关系模型，不创建数据库、迁移、存储桶或客户端。V0.2 开始接入用户系统时，需根据当时的 Supabase 版本与需求复核字段、索引和访问策略。
+本文规划未来 Supabase/PostgreSQL 的关系模型。V0.2 Phase 1 只对齐文档，不创建数据库、迁移、存储桶或客户端；后续 Phase 才会按本规划接入认证与数据持久化，并根据实际使用的 Supabase 版本复核字段、索引和访问策略。
 
 - 主键建议使用 UUID；时间使用 `timestamptz`，统一存 UTC，展示时按用户时区转换。
 - 个人数据表都有 `user_id`；服务端与数据库访问规则必须校验所有权。
@@ -10,7 +10,17 @@
 - 书籍原文件存私有对象存储，数据库只保存路径和元数据；不把 EPUB/PDF 二进制写入普通表。
 - 分类与标签不同：书籍可有一个分类文本，标签是跨内容复用的多对多实体。若分类管理变复杂，再独立建表。
 
-## 2. 核心实体
+## 2. V0.2 数据基础范围
+
+V0.2 只落地 Supabase Auth、`books` 和 `reading_progress`，用于完成“登录 → 手动添加书籍 → 查看书籍详情 → 更新当前页 → Dashboard 显示最新进度”的最小闭环。
+
+- V0.2 的书籍是手动创建的元数据记录，不包含 EPUB/PDF 文件、文件格式、存储路径或真实封面上传。
+- `current_page` 是用户主动填写的人工页码记录，适用于纸质书或具有稳定页码的内容；它不等同于 EPUB CFI、PDF 阅读器内部页码/坐标或可自动恢复的阅读位置。
+- 阅读百分比由 `current_page / total_pages` 在查询或展示层计算并限制在 0–100%，V0.2 不额外持久化一份可能过期的百分比。
+- EPUB/PDF 文件、私有对象存储及文件元数据在 V0.3 增加；EPUB/PDF 的真实内容位置与阅读会话在 V0.6 增加。
+- V0.2 不创建 Note、Entry、Tag 等后续业务表；以下对应模型继续作为后续阶段规划保留。
+
+## 3. 核心实体
 
 ### User
 
@@ -26,37 +36,37 @@
 
 认证凭据只由 Supabase Auth 管理，不复制密码或 Secret 到应用表。
 
-### Book
+### Book / `books`（V0.2）
 
 | 字段 | 建议类型 | 说明 |
 | --- | --- | --- |
-| `id` | `uuid` PK | 书籍 ID |
-| `user_id` | `uuid` FK | 所有者 |
-| `title`, `author` | `text` | 书名必填；作者可为空 |
-| `category` | `text` nullable | 单一分类 |
-| `format` | `text` | V1 约束为 `epub` / `pdf`；TXT 待定 |
-| `storage_path` | `text` | 私有原文件路径 |
-| `cover_path` | `text` nullable | 私有封面路径或后续生成资源 |
-| `file_size_bytes`, `file_hash` | `bigint`, `text` nullable | 导入校验与重复检测辅助信息 |
-| `reading_status` | `text` | `want_to_read` / `reading` / `finished` / `paused` |
-| `added_at`, `finished_at` | `timestamptz` | 入库与完成时间；后者可为空 |
-| `created_at`, `updated_at` | `timestamptz` | 审计时间 |
+| `id` | `uuid` PK | 书籍 ID，默认生成 UUID |
+| `user_id` | `uuid` FK not null | 所有者，引用 `auth.users(id)` |
+| `title` | `text` not null | 书名；去除首尾空白后不可为空 |
+| `author` | `text` nullable | 作者可为空，界面使用明确的未知作者状态 |
+| `reading_status` | `text` not null | 默认 `want_to_read`；约束为 `want_to_read` / `reading` / `finished` / `paused` |
+| `total_pages` | `integer` not null | 人工进度的总页数，必须大于 0 |
+| `finished_at` | `timestamptz` nullable | 标记已读的时间；具体状态同步规则在实现阶段确定 |
+| `created_at`, `updated_at` | `timestamptz` not null | 审计时间，默认当前时间 |
 
-书籍的进度与阅读位置以 `ReadingProgress` 为准，不在 `Book` 内维护第二份可变进度。一本书由一个用户拥有；同一文件可以由不同用户各自导入。
+书籍的可变进度以 `reading_progress` 为准，不在 `books` 内维护第二份当前页。建议为 `(id, user_id)` 建立唯一约束，供进度表使用复合外键，防止书籍与进度属于不同用户。
 
-### ReadingProgress
+V0.3 再为 `books` 增加或复核 `category`、`format`、`storage_path`、`cover_path`、`file_size_bytes` 和 `file_hash`。`format` 届时约束为 `epub` / `pdf`；TXT 是否支持仍待定。书籍原文件放入私有对象存储，不写入普通数据库列。
+
+### ReadingProgress / `reading_progress`（V0.2）
 
 | 字段 | 建议类型 | 说明 |
 | --- | --- | --- |
-| `id` | `uuid` PK | 记录 ID |
-| `user_id`, `book_id` | `uuid` FK | 所有者与书籍；建议 `unique(user_id, book_id)` |
-| `locator_type` | `text` | `epub_cfi` / `pdf_page` 等 |
-| `locator` | `jsonb` | 格式化位置，例如 CFI 或页码与视图位置 |
-| `progress_ratio` | `numeric(5,4)` | 0–1 的显示进度 |
-| `last_read_at` | `timestamptz` | 最近阅读时间 |
-| `updated_at` | `timestamptz` | 位置更新时间 |
+| `id` | `uuid` PK | 记录 ID，默认生成 UUID |
+| `user_id` | `uuid` FK not null | 所有者，引用 `auth.users(id)` |
+| `book_id` | `uuid` FK not null | 所属书籍；与 `user_id` 组成复合外键并级联删除 |
+| `current_page` | `integer` not null | 人工记录的当前页，默认 0，不得小于 0 或超过书籍 `total_pages` |
+| `last_read_at` | `timestamptz` nullable | 用户实际更新页码的最近时间，供 Dashboard 选择继续阅读书籍 |
+| `created_at`, `updated_at` | `timestamptz` not null | 创建和更新时间，默认当前时间 |
 
-阅读位置更新需考虑跨设备最后写入冲突；V0.6 确定以时间戳或版本号为准的合并策略。阅读时长需要独立的 `ReadingSession`（建议字段：`user_id`, `book_id`, `started_at`, `ended_at`, `active_seconds`），在 V0.6 设计并在 V0.9 用于统计；不能仅从进度推算阅读时长。
+每位用户的每本书只保留一条记录，使用 `unique(user_id, book_id)`。跨表的 `current_page <= total_pages` 不能只依靠普通 `CHECK` 完成，迁移中需要使用受测试的数据库函数或触发器保证；添加书籍与初始进度应在同一事务内完成。
+
+V0.2 的 `current_page` 不作为未来阅读器的定位字段。V0.6 再增加或拆分 `locator_type`、`locator`、文件版本校验与跨设备冲突策略，用于 EPUB CFI、PDF 页面及视图位置。阅读时长使用独立 `ReadingSession`（建议字段：`user_id`, `book_id`, `started_at`, `ended_at`, `active_seconds`），不能仅从人工页码或百分比推算。
 
 ### Note
 
@@ -101,7 +111,7 @@
 
 为满足书籍和笔记同样可打标签，还需要 `BookTag(book_id, tag_id)` 与 `NoteTag(note_id, tag_id)`，各自使用复合主键。关联双方必须属于同一用户；不能只靠单列外键推断跨用户关联安全，实际迁移中要用复合约束或受 RLS 保护的写入策略保证。
 
-## 3. 引用与关系
+## 4. 引用与关系
 
 - `User 1—N Book / Note / Entry / Tag`。
 - `Book 1—1 ReadingProgress`（对单个用户的一本书），`Book 1—N Note`，`Book 1—N Entry`（主要关联）。
@@ -109,9 +119,11 @@
 - 心得与随笔引用笔记，随笔引用书籍和灵感时，建议使用有真实外键的 `EntryBookReference(entry_id, book_id)`、`EntryNoteReference(entry_id, note_id)`、`EntryEntryReference(entry_id, target_entry_id)`。这些表属于对应功能阶段的设计，不在本次创建。应阻止自引用及跨用户引用。
 - V2.0 双向链接与知识图谱可以基于引用关系扩展，但不在 V1.0 提前实现通用图谱结构。
 
-## 4. 位置、搜索与安全
+## 5. 位置、搜索与安全
 
-- EPUB 位置优先保存稳定 CFI，PDF 保存页码并视需要保存选区坐标及摘录文本。位置应与 `format`、文件版本或哈希一起校验，避免换文件后错误跳转。
-- 常用索引建议覆盖各表 `user_id, updated_at`，以及 `Book(user_id, reading_status)`、`Note(user_id, book_id)`、`Entry(user_id, type)` 和标签关联键。V0.9 再按实际查询确定全文检索索引和中文分词方案。
-- Supabase 阶段对所有个人内容和关联表启用 RLS；对象存储使用私有桶，读取 URL 需受控。服务端也应检查 `user_id`，不能只依赖前端筛选。
+- V0.2 建议索引 `books(user_id, reading_status, updated_at)` 与 `reading_progress(user_id, last_read_at)`；后续索引覆盖 `Note(user_id, book_id)`、`Entry(user_id, type)` 和标签关联键。V0.9 再按实际查询确定全文检索索引和中文分词方案。
+- 所有位于暴露 schema 的个人数据表必须启用 RLS，并撤销 `anon` 不需要的权限；只向 `authenticated` 授予产品实际使用的操作。
+- V0.2 只向应用开放实际需要的查询、插入和更新权限；对应策略必须显式校验 `auth.uid() is not null` 且等于行内 `user_id`。删除尚未进入 V0.2 产品流程，不向普通客户端开放；未来启用时必须单独增加策略和验收。服务端写入同样重新验证当前用户，不能只依赖前端筛选或路由保护。
+- RLS 验收至少使用两个测试用户覆盖允许与拒绝路径，确认用户 A 不能读取或修改用户 B 的书籍和进度。浏览器与普通 Server Action 不使用绕过 RLS 的 `service_role` Key。
+- V0.3 的书籍文件使用私有对象存储，读取 URL 需受控。V0.6 中 EPUB 位置优先保存稳定 CFI，PDF 保存页码并视需要保存选区坐标及摘录文本；位置需要与文件版本或哈希一起校验，避免换文件后错误跳转。
 - 删除书籍时需要决定笔记、心得与引用如何处理。倾向保留用户写作内容并将来源标记为不可用，具体外键删除行为在 V0.3/V0.7 落地前确定。
