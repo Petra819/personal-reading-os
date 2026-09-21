@@ -4,6 +4,7 @@ import { BookCover } from "@/components/book-cover";
 import { ProgressBar } from "@/components/ui";
 import { getBookById } from "@/lib/books/queries";
 import { readingStatusLabels } from "@/lib/books/types";
+import { ReadingProgressForm } from "./reading-progress-form";
 
 const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   year: "numeric",
@@ -68,6 +69,21 @@ export default async function BookDetailPage({
             <p>已读 {book.currentPage} 页，共 {book.totalPages} 页</p>
           </div>
         </div>
+      </section>
+
+      <section className="reading-update-section" aria-labelledby="reading-update-heading">
+        <div className="reading-update-intro">
+          <p className="eyebrow">UPDATE PROGRESS</p>
+          <h2 id="reading-update-heading">记录阅读进度</h2>
+          <p>更新当前页数和阅读状态。页码仍是当前阶段的人工记录。</p>
+        </div>
+        <ReadingProgressForm
+          key={book.id}
+          bookId={book.id}
+          currentPage={book.currentPage}
+          totalPages={book.totalPages}
+          readingStatus={book.readingStatus}
+        />
       </section>
 
       <section className="book-detail-meta" aria-labelledby="book-record-heading">

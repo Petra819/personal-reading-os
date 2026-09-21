@@ -161,6 +161,17 @@ svg { flex: none; }
 .book-detail-progress-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; margin-bottom: 12px; color: var(--secondary); font-size: 12px; }
 .book-detail-progress-heading strong { color: var(--ink); font-size: 28px; font-weight: 600; letter-spacing: -.04em; }
 .book-detail-progress > p { margin: 11px 0 0; color: var(--secondary); font-size: 12px; line-height: 1.6; }
+.reading-update-section { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); gap: clamp(42px, 7vw, 78px); align-items: start; padding-bottom: 45px; border-bottom: 1px solid var(--line); }
+.reading-update-intro h2 { margin: 9px 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -.03em; }
+.reading-update-intro > p:last-child { margin: 0; color: var(--secondary); font-size: 12px; line-height: 1.8; }
+.reading-update-form { display: flex; flex-direction: column; gap: 18px; }
+.reading-update-fields { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(82px, .6fr) minmax(140px, 1.2fr); gap: 16px; align-items: start; min-width: 0; margin: 0; padding: 0; border: 0; }
+.reading-update-fields .form-field { min-width: 0; }
+.reading-total-field { display: flex; flex-direction: column; justify-content: space-between; min-height: 76px; padding: 1px 0 7px; }
+.reading-total-field > span { color: var(--ink); font-size: 13px; font-weight: 600; }
+.reading-total-field strong { color: var(--ink); font-size: 24px; font-weight: 560; letter-spacing: -.03em; }
+.reading-total-field small { color: var(--secondary); font-size: 11px; font-weight: 400; letter-spacing: 0; }
+.reading-update-submit { align-self: flex-start; }
 .book-detail-meta { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); gap: clamp(42px, 7vw, 78px); align-items: start; }
 .book-detail-meta h2 { margin: 9px 0 0; font-size: 20px; font-weight: 600; letter-spacing: -.03em; }
 .book-detail-meta dl { margin: 0; border-top: 1px solid var(--line); }
@@ -202,6 +213,7 @@ svg { flex: none; }
 .form-field input[aria-invalid="true"], .form-field select[aria-invalid="true"] { border-color: var(--secondary); }
 .field-error { margin: 0; color: var(--secondary); font-size: 12px; line-height: 1.5; }
 .form-error { margin: -2px 0 0; padding: 11px 13px; border-left: 2px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 12px; line-height: 1.6; }
+.form-success { margin: -2px 0 0; padding: 11px 13px; border-left: 2px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 12px; line-height: 1.6; }
 .field-optional { margin-left: 5px; color: var(--secondary); font-size: 11px; font-weight: 400; }
 .add-book-page { width: min(100%, 900px); }
 .add-book-back { align-self: flex-start; min-height: 36px; }
@@ -280,6 +292,9 @@ svg { flex: none; }
   .library-grid { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 36px 20px; }
   .book-detail-hero, .book-detail-meta { grid-template-columns: 156px minmax(0, 1fr); gap: 30px; }
   .book-detail-progress { margin-top: 34px; }
+  .reading-update-section { grid-template-columns: 156px minmax(0, 1fr); gap: 30px; }
+  .reading-update-fields { grid-template-columns: 1fr 1fr; }
+  .reading-update-fields .form-field:last-child { grid-column: 1 / -1; }
   .reader-topbar { padding: 20px; }
   .capture-backdrop { align-items: flex-end; padding: 0; }
   .capture-panel { width: 100%; max-width: none; padding: 25px 23px calc(28px + env(safe-area-inset-bottom)); border-radius: 12px 12px 0 0; }
@@ -313,6 +328,9 @@ svg { flex: none; }
   .book-detail-copy { padding-top: 2px; }
   .book-detail-copy h1 { font-size: clamp(28px, 8vw, 36px); }
   .book-detail-progress { margin-top: 27px; }
+  .reading-update-section { grid-template-columns: 1fr; gap: 24px; padding-bottom: 35px; }
+  .reading-update-fields { grid-template-columns: minmax(0, 1fr) minmax(96px, .6fr); }
+  .reading-update-submit { align-self: stretch; width: 100%; }
   .book-detail-meta { grid-template-columns: 1fr; gap: 21px; }
   .book-form-pages { grid-template-columns: 1fr; }
   .book-form-actions { align-items: stretch; flex-direction: column; }

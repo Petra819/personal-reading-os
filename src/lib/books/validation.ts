@@ -20,6 +20,18 @@ export type NewBookInput = {
   currentPage: number;
 };
 
+export type ReadingUpdateValues = {
+  currentPage: string;
+  readingStatus: string;
+};
+
+export type ReadingUpdateErrors = Partial<Record<keyof ReadingUpdateValues, string>>;
+
+export type ReadingUpdateInput = {
+  currentPage: number;
+  readingStatus: ReadingStatus;
+};
+
 function getTextValue(formData: FormData, name: string) {
   const value = formData.get(name);
   return typeof value === "string" ? value : "";
@@ -83,6 +95,40 @@ export function validateBookForm(formData: FormData) {
     readingStatus: values.readingStatus,
     totalPages,
     currentPage,
+  };
+
+  return { values, errors, input };
+}
+
+export function validateReadingUpdateForm(formData: FormData, totalPages: number) {
+  const values: ReadingUpdateValues = {
+    currentPage: getTextValue(formData, "current_page"),
+    readingStatus: getTextValue(formData, "reading_status"),
+  };
+  const errors: ReadingUpdateErrors = {};
+  const currentPage = parsePostgresInteger(values.currentPage);
+
+  if (currentPage === null) {
+    errors.currentPage = "当前页数必须是大于或等于 0 的整数。";
+  } else if (currentPage > totalPages) {
+    errors.currentPage = `当前页数不能超过总页数（${totalPages} 页）。`;
+  }
+
+  if (!isReadingStatus(values.readingStatus)) {
+    errors.readingStatus = "请选择有效的阅读状态。";
+  }
+
+  if (
+    Object.keys(errors).length > 0
+    || currentPage === null
+    || !isReadingStatus(values.readingStatus)
+  ) {
+    return { values, errors, input: null };
+  }
+
+  const input: ReadingUpdateInput = {
+    currentPage,
+    readingStatus: values.readingStatus,
   };
 
   return { values, errors, input };
