@@ -14,22 +14,27 @@ The project prioritizes a calm reading experience, clear source context, low-fri
 
 ## Current Version
 
-**V0.2 — Data Foundation & Bookshelf MVP (in development)**
+**V0.2 — Data Foundation & Bookshelf MVP**
 
-V0.1 is complete and includes:
+V0.2 is complete and includes:
 
-- Responsive application shell and navigation
-- Dashboard with mock reading activity
-- Bookshelf, notes, inspiration, freewriting, search, reflections, and settings page foundations
-- Reader placeholder with a clear future entry point
-- Desktop, tablet, and mobile layouts
-- Reusable typography, buttons, inputs, progress, empty states, and navigation patterns
-
-V0.2 is now in development. The Supabase/PostgreSQL data foundation and single-user Email + Password authentication are in place. The remaining scope covers manual book creation, Bookshelf, Book Detail, basic page-based reading progress, and real Dashboard data.
-
-Application content still uses the V0.1 UI foundation and mock data. Bookshelf CRUD, real Dashboard data, book imports, EPUB/PDF reading, and search have not been connected yet.
+- Responsive application shell and protected application routes
+- Single-user Email + Password authentication with cookie-based sessions
+- Supabase/PostgreSQL persistence with Row Level Security for private book data
+- Manual book creation, a real Bookshelf, and Book Detail pages
+- Manual page progress and reading status updates through an atomic database RPC
+- A Dashboard backed by real current-reading data and book status counts
+- Desktop, tablet, and mobile layouts with reusable form, progress, empty, and error states
 
 Authentication currently uses a single personal account created manually in the Supabase Dashboard. The application provides Email + Password sign-in and does not expose public registration. Magic Link authentication may be considered later if custom SMTP is configured.
+
+EPUB/PDF imports, the Reader, source locations, Notes CRUD, Ideas, Reflections, search persistence, reading-time tracking, and AI features are not implemented yet. Placeholder pages remain for planned modules and clearly identify unavailable functionality.
+
+## Current Flow
+
+**Login → Dashboard → Library → Add Book → Book Detail → Update reading progress → Dashboard sync**
+
+Books are currently entered manually. Page numbers represent a user-maintained reading record and are not EPUB/PDF reader locations.
 
 ## Screenshots
 
@@ -41,14 +46,14 @@ Screenshots will be added as the interface reaches stable review points.
 
 | Module | Purpose |
 | --- | --- |
-| Dashboard | Surfaces the current book, recent records, reading summaries, and quick capture entry points. |
-| Bookshelf | Organizes imported books, metadata, reading status, and progress in future stages. |
-| Notes | Keeps reading notes, excerpts, source books, chapters, tags, and original locations together. |
-| Inspiration | Captures short ideas, questions, quotations, and topics for later exploration. |
-| Freewriting | Provides a space for longer-form writing that can reference books, notes, and ideas. |
+| Dashboard | Shows the current reading book and real counts for each reading status. |
+| Bookshelf | Lists manually added books with their status and page-based progress. |
+| Notes | Planned space for reading notes, excerpts, sources, and original locations. |
+| Inspiration | Planned space for short ideas, questions, quotations, and research topics. |
+| Freewriting | Planned space for longer-form writing connected to reading material. |
 | Search | Will provide a unified way to retrieve books and personal reading knowledge. |
-| Reflections | Supports book-level and chapter-level reflections connected to source material. |
-| Settings | Houses reading preferences and future account, appearance, and tag management. |
+| Reflections | Planned space for book-level and chapter-level reflections. |
+| Settings | Provides sign-out and entry points for planned personal preferences. |
 
 ## Tech Stack
 
@@ -60,7 +65,7 @@ Screenshots will be added as the interface reaches stable review points.
 - [Supabase JS 2.116.0](https://supabase.com/docs/reference/javascript/) and `@supabase/ssr` 0.12.7
 - Supabase Auth and PostgreSQL with Row Level Security
 
-Supabase currently provides cookie-based authentication and the initial private data schema. Application pages do not query or mutate book data yet.
+Supabase provides cookie-based authentication, private book persistence, RLS ownership boundaries, and transactional RPCs for book creation and reading-state updates.
 
 ## Project Structure
 
@@ -109,8 +114,8 @@ npm run build
 ## Roadmap
 
 - [x] **V0.1 — Basic UI:** Responsive application shell, navigation, page foundations, typography, and empty states
-- [ ] **V0.2 — Data Foundation & Bookshelf MVP (in progress):** Minimal authentication, private data, manual books, Book Detail, page-based progress, and real Dashboard data
-- [ ] **V0.3 — Bookshelf File Imports:** EPUB/PDF imports, private storage, file metadata, covers, and duplicate handling
+- [x] **V0.2 — Data Foundation & Bookshelf MVP:** Minimal authentication, private data, manual books, Book Detail, atomic page-based progress updates, and real Dashboard data
+- [ ] **V0.3 — File Import & Storage Foundation:** EPUB/PDF imports, private storage, file metadata, covers, and duplicate handling
 - [ ] **V0.4 — EPUB Reader:** EPUB content, table of contents, reading settings, and navigation
 - [ ] **V0.5 — PDF Reader:** PDF pages, page navigation, zoom, and responsive reading layout
 - [ ] **V0.6 — Reading Locations and Sessions:** EPUB/PDF positions, cross-device recovery rules, and reading sessions
@@ -132,4 +137,4 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for scope and completion criteria for eac
 
 ## Status
 
-**Active development.** V0.1 Responsive UI Foundation is complete, and V0.2 Data Foundation & Bookshelf MVP is now in progress. Supabase data foundations and single-user Email + Password authentication are implemented; Bookshelf persistence, real Dashboard data, readers, and production workflows remain in development.
+**Active development.** V0.2 Data Foundation & Bookshelf MVP is complete. The current product supports the authenticated manual-bookshelf workflow described above. V0.3 File Import & Storage Foundation is planned and has not started; readers and the remaining knowledge-management modules follow in later stages.

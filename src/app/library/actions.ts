@@ -59,6 +59,7 @@ export async function createBook(
     };
   }
 
+  revalidatePath("/");
   revalidatePath("/library");
   redirect(`/library/${bookId}`);
 }
@@ -126,6 +127,7 @@ export async function updateReadingProgress(
     };
   }
 
+  revalidatePath("/");
   revalidatePath("/library");
   revalidatePath(`/library/${book.id}`);
 

@@ -271,6 +271,14 @@ svg { flex: none; }
   .capture-callout { margin-top: 0; }
 }
 
+@media (max-width: 899px) {
+  .login-page { place-items: start center; padding: calc(32px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)); }
+  .login-layout { grid-template-columns: 1fr; gap: 42px; width: min(100%, 480px); }
+  .login-brand { margin-bottom: 43px; }
+  .login-intro h1 { font-size: clamp(34px, 10vw, 44px); }
+  .login-panel { padding: 37px 0 0; border-top: 1px solid var(--line); border-left: 0; }
+}
+
 @media (max-width: 767px) {
   .compact-header { height: calc(62px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 16px 0; }
   .content-wrap { padding: 34px 20px calc(112px + env(safe-area-inset-bottom)); }
@@ -309,11 +317,6 @@ svg { flex: none; }
   .reader-topbar { padding: 20px; }
   .capture-backdrop { align-items: flex-end; padding: 0; }
   .capture-panel { width: 100%; max-width: none; padding: 25px 23px calc(28px + env(safe-area-inset-bottom)); border-radius: 12px 12px 0 0; }
-  .login-page { place-items: start center; padding: calc(32px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)); }
-  .login-layout { grid-template-columns: 1fr; gap: 42px; width: min(100%, 480px); }
-  .login-brand { margin-bottom: 43px; }
-  .login-intro h1 { font-size: clamp(34px, 10vw, 44px); }
-  .login-panel { padding: 37px 0 0; border-top: 1px solid var(--line); border-left: 0; }
   .add-book-layout { grid-template-columns: 1fr; gap: 31px; }
 }
 

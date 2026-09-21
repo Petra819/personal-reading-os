@@ -2,7 +2,7 @@
 
 ## 1. 范围与约定
 
-本文规划未来 Supabase/PostgreSQL 的关系模型。V0.2 Phase 1 只对齐文档，不创建数据库、迁移、存储桶或客户端；后续 Phase 才会按本规划接入认证与数据持久化，并根据实际使用的 Supabase 版本复核字段、索引和访问策略。
+本文同时记录已经部署的 V0.2 Supabase/PostgreSQL 数据基础，以及后续阶段的关系模型规划。V0.2 已落地 Supabase Auth、`books`、`reading_progress`、RLS、约束、触发器和最小 RPC；Note、Entry、Tag、文件存储与阅读器位置仍只是规划。
 
 - 主键建议使用 UUID；时间使用 `timestamptz`，统一存 UTC，展示时按用户时区转换。
 - 个人数据表都有 `user_id`；服务端与数据库访问规则必须校验所有权。
@@ -46,7 +46,7 @@ V0.2 只落地 Supabase Auth、`books` 和 `reading_progress`，用于完成“�
 | `author` | `text` nullable | 作者可为空，界面使用明确的未知作者状态 |
 | `reading_status` | `text` not null | 默认 `want_to_read`；约束为 `want_to_read` / `reading` / `finished` / `paused` |
 | `total_pages` | `integer` not null | 人工进度的总页数，必须大于 0 |
-| `finished_at` | `timestamptz` nullable | 标记已读的时间；具体状态同步规则在实现阶段确定 |
+| `finished_at` | `timestamptz` nullable | 进入 `finished` 且为空时自动记录时间；离开 `finished` 时自动清空 |
 | `created_at`, `updated_at` | `timestamptz` not null | 审计时间，默认当前时间 |
 
 书籍的可变进度以 `reading_progress` 为准，不在 `books` 内维护第二份当前页。建议为 `(id, user_id)` 建立唯一约束，供进度表使用复合外键，防止书籍与进度属于不同用户。
@@ -111,7 +111,35 @@ V0.2 的 `current_page` 不作为未来阅读器的定位字段。V0.6 再增加
 
 为满足书籍和笔记同样可打标签，还需要 `BookTag(book_id, tag_id)` 与 `NoteTag(note_id, tag_id)`，各自使用复合主键。关联双方必须属于同一用户；不能只靠单列外键推断跨用户关联安全，实际迁移中要用复合约束或受 RLS 保护的写入策略保证。
 
-## 4. 引用与关系
+## 4. V0.2 已部署实现
+
+V0.2 使用以下两份 migration，均已部署并经过实际流程验证：
+
+- `supabase/migrations/20260920000000_create_books_and_reading_progress.sql`
+- `supabase/migrations/20260921000000_update_book_reading_state.sql`
+
+### 数据完整性与触发器
+
+- `books(id, user_id)` 唯一约束与 `reading_progress(book_id, user_id)` 复合外键共同保证进度记录和书籍属于同一用户；删除书籍时对应进度级联删除。
+- `validate_reading_progress_page()` 读取并锁定对应书籍，阻止 `current_page` 超过数据库中的 `total_pages`，并在页码变化时更新 `last_read_at`。
+- `validate_book_total_pages()` 阻止把总页数降到已有当前页数以下，并与进度校验使用一致的锁顺序策略。
+- `set_updated_at()` 统一刷新 `updated_at`；用于 `books` 时同时维护 `finished_at` 与 `reading_status` 的一致性。
+- 标题在创建 RPC 中使用 `btrim()` 后的值；作者会去除首尾空白，纯空白作者保存为 `null`。
+
+### 原子 RPC
+
+- `create_book_with_progress(...)` 使用 `auth.uid()` 作为所有者，在同一函数调用中创建 `books` 和初始 `reading_progress`，客户端不能传入 `user_id`。
+- `update_book_reading_state(p_book_id, p_current_page, p_reading_status)` 锁定当前用户的书籍行，使用数据库真实 `total_pages` 校验页码，并在同一事务中更新页码与阅读状态；任一步失败都会回滚整个调用。
+- 两个 RPC 都是 `SECURITY INVOKER`，设置空 `search_path` 并完整限定对象名称。`PUBLIC` 与 `anon` 没有执行权限，只有 `authenticated` 可以调用。
+- `last_read_at`、`finished_at` 和 `updated_at` 继续由触发器维护，RPC 不复制这些规则。
+
+### RLS、Grants 与索引
+
+- `books` 和 `reading_progress` 均启用 RLS。SELECT、INSERT、UPDATE、DELETE policy 都要求 `auth.uid()` 非空且等于行内 `user_id`。
+- `anon` 没有两张个人数据表的读取或写入权限；`authenticated` 拥有表级 SELECT、INSERT、UPDATE、DELETE 权限，但每次操作仍必须通过 RLS。V0.2 应用界面没有提供删除操作。
+- 已创建 `books(user_id, reading_status, updated_at desc)` 与 `reading_progress(user_id, last_read_at desc)` 索引，服务于书架、状态筛选和继续阅读排序。
+
+## 5. 引用与关系
 
 - `User 1—N Book / Note / Entry / Tag`。
 - `Book 1—1 ReadingProgress`（对单个用户的一本书），`Book 1—N Note`，`Book 1—N Entry`（主要关联）。
@@ -119,11 +147,11 @@ V0.2 的 `current_page` 不作为未来阅读器的定位字段。V0.6 再增加
 - 心得与随笔引用笔记，随笔引用书籍和灵感时，建议使用有真实外键的 `EntryBookReference(entry_id, book_id)`、`EntryNoteReference(entry_id, note_id)`、`EntryEntryReference(entry_id, target_entry_id)`。这些表属于对应功能阶段的设计，不在本次创建。应阻止自引用及跨用户引用。
 - V2.0 双向链接与知识图谱可以基于引用关系扩展，但不在 V1.0 提前实现通用图谱结构。
 
-## 5. 位置、搜索与安全
+## 6. 位置、搜索与安全
 
 - V0.2 建议索引 `books(user_id, reading_status, updated_at)` 与 `reading_progress(user_id, last_read_at)`；后续索引覆盖 `Note(user_id, book_id)`、`Entry(user_id, type)` 和标签关联键。V0.9 再按实际查询确定全文检索索引和中文分词方案。
 - 所有位于暴露 schema 的个人数据表必须启用 RLS，并撤销 `anon` 不需要的权限；只向 `authenticated` 授予产品实际使用的操作。
-- V0.2 只向应用开放实际需要的查询、插入和更新权限；对应策略必须显式校验 `auth.uid() is not null` 且等于行内 `user_id`。删除尚未进入 V0.2 产品流程，不向普通客户端开放；未来启用时必须单独增加策略和验收。服务端写入同样重新验证当前用户，不能只依赖前端筛选或路由保护。
+- V0.2 的表级权限包含 SELECT、INSERT、UPDATE、DELETE，但所有操作都由 `auth.uid() is not null` 且等于行内 `user_id` 的 RLS policy 约束。应用界面当前只开放查询、创建和更新流程，没有删除入口。服务端写入同样重新验证当前用户，不能只依赖前端筛选或路由保护。
 - RLS 验收至少使用两个测试用户覆盖允许与拒绝路径，确认用户 A 不能读取或修改用户 B 的书籍和进度。浏览器与普通 Server Action 不使用绕过 RLS 的 `service_role` Key。
 - V0.3 的书籍文件使用私有对象存储，读取 URL 需受控。V0.6 中 EPUB 位置优先保存稳定 CFI，PDF 保存页码并视需要保存选区坐标及摘录文本；位置需要与文件版本或哈希一起校验，避免换文件后错误跳转。
 - 删除书籍时需要决定笔记、心得与引用如何处理。倾向保留用户写作内容并将来源标记为不可用，具体外键删除行为在 V0.3/V0.7 落地前确定。

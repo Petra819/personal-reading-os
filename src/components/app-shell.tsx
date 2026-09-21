@@ -21,6 +21,22 @@ const secondaryLinks: { href: string; label: string; icon: IconName }[] = [
 
 const CaptureContext = createContext<() => void>(() => {});
 
+function getAriaCurrent(pathname: string, href: string) {
+  if (pathname === href) {
+    return "page" as const;
+  }
+
+  if (href !== "/" && pathname.startsWith(`${href}/`)) {
+    return "location" as const;
+  }
+
+  return undefined;
+}
+
+function isPathActive(pathname: string, href: string) {
+  return Boolean(getAriaCurrent(pathname, href));
+}
+
 export function QuickCaptureTrigger({ children, className = "button button-primary" }: { children: ReactNode; className?: string }) {
   const openCapture = useContext(CaptureContext);
   return <button type="button" className={className} onClick={openCapture}>{children}</button>;
@@ -36,18 +52,23 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const renderLink = ({ href, label, icon }: { href: string; label: string; icon: IconName }) => (
-    <Link
-      key={href}
-      href={href}
-      className={`side-link${pathname === href ? " is-current" : ""}`}
-      aria-current={pathname === href ? "page" : undefined}
-      onClick={onNavigate}
-    >
-      <Icon name={icon} width={19} height={19} />
-      <span>{label}</span>
-    </Link>
-  );
+  const renderLink = ({ href, label, icon }: { href: string; label: string; icon: IconName }) => {
+    const isCurrent = isPathActive(pathname, href);
+    const ariaCurrent = getAriaCurrent(pathname, href);
+
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={`side-link${isCurrent ? " is-current" : ""}`}
+        aria-current={ariaCurrent}
+        onClick={onNavigate}
+      >
+        <Icon name={icon} width={19} height={19} />
+        <span>{label}</span>
+      </Link>
+    );
+  };
 
   return (
     <nav className="side-nav" aria-label="主导航">
@@ -71,18 +92,24 @@ function MobileNav({ pathname, onCapture }: { pathname: string; onCapture: () =>
   return (
     <nav className="mobile-nav" aria-label="底部导航">
       {links.slice(0, 2).map(({ href, label, icon }) => (
-        <Link key={href} href={href} className={`mobile-link${pathname === href ? " is-current" : ""}`} aria-current={pathname === href ? "page" : undefined}>
+        <Link key={href} href={href} className={`mobile-link${isPathActive(pathname, href) ? " is-current" : ""}`} aria-current={getAriaCurrent(pathname, href)}>
           <Icon name={icon} width={21} height={21} /><span>{label}</span>
         </Link>
       ))}
       <button className="mobile-capture" type="button" onClick={onCapture} aria-label="快速记录（即将开放）">
         <Icon name="plus" width={23} height={23} />
       </button>
-      {links.slice(2).map(({ href, label, icon }) => (
-        <Link key={href} href={href} className={`mobile-link${pathname === href || (href === "/settings" && ["/ideas", "/writing", "/search", "/reflections"].includes(pathname)) ? " is-current" : ""}`} aria-current={pathname === href ? "page" : undefined}>
-          <Icon name={icon} width={21} height={21} /><span>{label}</span>
-        </Link>
-      ))}
+      {links.slice(2).map(({ href, label, icon }) => {
+        const ariaCurrent = getAriaCurrent(pathname, href);
+        const isCurrent = Boolean(ariaCurrent)
+          || (href === "/settings" && ["/ideas", "/writing", "/search", "/reflections"].includes(pathname));
+
+        return (
+          <Link key={href} href={href} className={`mobile-link${isCurrent ? " is-current" : ""}`} aria-current={ariaCurrent}>
+            <Icon name={icon} width={21} height={21} /><span>{label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }
